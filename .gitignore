@@ -1,4 +1,4 @@
- ipch
+ ipch/
 *.vcxproj
 *.filters
 *.user
@@ -12,5 +12,6 @@
 *.tlog
 *.log
 *.idb
+*.ipch
 test/Debug
 
