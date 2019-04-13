@@ -76,7 +76,7 @@ int main()
 	}
 	else
 	{
-		WordReplace(Buffer);																		//替换
+		//WordReplace(Buffer);																		//替换
 		LineFeed(Buffer);																			//换行
 		printf("%S", Buffer);
 		//std::wcout << Buffer.GetBuffer();
@@ -152,7 +152,7 @@ VOID LineFeed(CString &Buffer)
 		else if (Buffer=="")
 			Buffer = Buffer + temp;
 		else
-			Buffer = Buffer + " " + temp;
+			Buffer = Buffer + " " + temp;//普通数组元素之间有空格
 	}
 }
 
@@ -160,25 +160,55 @@ VOID StrToWordArray(CStringArray &wordArray,CString &Buffer)
 {
 	int length = 0;
 	int start;
-
+	int single_quotes=0;
+	CString m_word;
 	for (int i = 0; i < Buffer.GetLength(); i++)
 	{
 		if (Buffer[i] != ' ' && Buffer[i] != '\0' && Buffer[i] != '\n')
 		{
 			start = i;
-			if (Buffer[i]== ',' || Buffer[i] == '(' || Buffer[i] == ')')
+			if (Buffer[i]=='\'')
+			{
+				single_quotes++;
+			}
+			if (Buffer[i]== ',' || Buffer[i] == '(' || Buffer[i] == ')') //将这些符号作为wordArray数组元素
 			{
 				wordArray.Add(Buffer.Mid(start, 1));
 				continue;
 			}
-			while ((Buffer[i] != ' ') && (Buffer[i] != ')') && (Buffer[i] != ',') && Buffer[i] != '\n'&& Buffer[i] != '\0')
+
+			//通过while循环取出一个单词
+			while ((Buffer[i] != ' ') && (Buffer[i] != ')') && (Buffer[i] != ',') && Buffer[i] != '\n' && Buffer[i] != '\0' && Buffer[i] != '\r')
 			{
-				i++;
+				if (Buffer[i] == '\'')
+				{
+					single_quotes++;
+					if (single_quotes == 2)//遇到一对单引号后，将第二个单引号作为单词结束信号。这是为了处理单引号后面没有空格的情况
+					{
+						length++;//跳出循环前在单词中添加此单引号
+						i++;//为抵消循环外面i--的影响，增加i++冗余操作
+						single_quotes = 0;
+						break;
+					}
+				}
+				i++;//取下一个字符
 				length++;
 			}
-			i--;
-			wordArray.Add(Buffer.Mid(start, length));
-			length = 0;
+			if (length==0)
+			{
+				continue;
+			}
+			m_word = Buffer.Mid(start, length);
+			
+			//单词替换
+			if (In(ReplaceWord, Buffer.Mid(start, length).MakeUpper()))
+			{
+				m_word = Buffer.Mid(start, length).MakeUpper();
+			}
+			wordArray.Add(m_word);
+			
+			length = 0;//单词长度置位
+			i--;//校正while循环导致的索引i偏移，否则会跳过一个字符
 		}
 	}
 }
@@ -210,12 +240,12 @@ VOID WordReplace(CString &Buffer)
 	BufferTemp.MakeUpper();																//将文件内容复制一份，进行大写转换，因为CString的find函数区分大小写
 	for (int i = 0; i < ReplaceWord.GetSize(); i++)										//遍历SearchWord中的所有查找词
 	{
-		m_index = BufferTemp.Find(ReplaceWord.GetAt(i));								//从0开始检索，检索不到则返回 - 1
-
+		m_index = BufferTemp.Find(ReplaceWord.GetAt(i));								//从0开始检索，检索不到则返回 - 1，
+		//这个替换是非全字匹配，不好，所以舍弃这个方案
 		if (m_index != -1)																//找到指定字符才能插入。
 		{
 			Word = Buffer.Mid(m_index, ReplaceWord.GetAt(i).GetLength());
-			Buffer.Replace(Word, ReplaceWord.GetAt(i));
+			Buffer.Replace(Word, ReplaceWord.GetAt(i));									//将Buffer中所有和替换词相等的字符串替换
 		}
 		m_index = 0;																	//m_index复位，上一个查找词查完时m_index=-1
 	}
@@ -262,6 +292,7 @@ VOID DataDefine()
 	foreFeedSearchWord.Add("ORDER");
 	foreFeedSearchWord.Add("AND");
 	foreFeedSearchWord.Add("WHERE");
+	foreFeedSearchWord.Add("INNER");
 	foreFeedSearchWord.Add(")");
 
 	SearchWord.Add(",");															//全部查找词
@@ -271,14 +302,21 @@ VOID DataDefine()
 	SearchWord.Add("ORDER");
 	SearchWord.Add("AND");
 	SearchWord.Add("WHERE");
+	SearchWord.Add("INNER");
 	SearchWord.Add(")");
 
 	ReplaceWord.Add("FROM");														//定义替换词
 	ReplaceWord.Add("SELECT");
 	ReplaceWord.Add("ON");
 	ReplaceWord.Add("ORDER");
+	ReplaceWord.Add("BY");
+	ReplaceWord.Add("DESC");
 	ReplaceWord.Add("AND");
+	ReplaceWord.Add("OR");
 	ReplaceWord.Add("WHERE");
+	ReplaceWord.Add("DELETE");
+	ReplaceWord.Add("INNER");
+	ReplaceWord.Add("JOIN");
 }
 
 // 复制数据到剪贴板

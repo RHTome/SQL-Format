@@ -1,12 +1,16 @@
-Debug 
-ipch
+ ipch
 *.vcxproj
 *.filters
 *.user
-!*.exe
-!*.cpp
+*.pdb
+*.ilk
 *.swp
 *.sdf
 *.suo
 .vs
+*.lastbuildstate
+*.tlog
+*.log
+*.idb
+test/Debug
 
