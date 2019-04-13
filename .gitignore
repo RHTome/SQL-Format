@@ -1,0 +1,12 @@
+Debug 
+ipch
+*.vcxproj
+*.filters
+*.user
+!*.exe
+!*.cpp
+*.swp
+*.sdf
+*.suo
+.vs
+
